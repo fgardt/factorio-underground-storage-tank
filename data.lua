@@ -1,19 +1,18 @@
 require("circuit-connector-sprites")
 
-local pictures = table.deepcopy(data.raw["storage-tank"]["storage-tank"].pictures)
-
 local graphics_dir = "__underground-storage-tank__/graphics/"
+local pictures = table.deepcopy(data.raw["storage-tank"]["storage-tank"].pictures)
 
 pictures.picture.sheets = {
     {
-        filename = graphics_dir .. "tank/base.png",
+        filename = graphics_dir .. "tank/window.png",
         priority = "extra-high",
         frames = 1,
         width = 176,
         height = 176,
         shift = { 0, 0 },
         hr_version = {
-            filename = graphics_dir .. "tank/hr-base.png",
+            filename = graphics_dir .. "tank/hr-window.png",
             priority = "extra-high",
             frames = 1,
             width = 352,
@@ -112,15 +111,19 @@ pictures.picture.sheets = {
 }
 
 pictures.window_background = {
-    filename = graphics_dir .. "tank/window-background.png",
+    filename = graphics_dir .. "tank/no_window.png",
     priority = "extra-high",
-    width = 24,
-    height = 42,
+    width = 1,
+    height = 1,
+    x = 0,
+    y = 0,
     hr_version = {
-        filename = graphics_dir .. "tank/hr-window-background.png",
+        filename = graphics_dir .. "tank/hr-no_window.png",
         priority = "extra-high",
-        width = 48,
-        height = 84,
+        width = 1,
+        height = 1,
+        x = 0,
+        y = 0,
         scale = 0.5
     }
 }
@@ -163,8 +166,9 @@ data:extend({
         minable = { mining_time = 1, result = "underground-storage-tank" },
 
         scale_info_icons = false,
-        collision_box = { { -2.3, -2.3 }, { 2.3, 2.3 } },
         selection_box = { { -2.5, -2.5 }, { 2.5, 2.5 } },
+        collision_box = { { -2.3, -2.3 }, { 2.3, 2.3 } },
+        collision_mask = { "object-layer", "water-tile" },
 
         flow_length_in_ticks = 360,
 
@@ -204,6 +208,29 @@ data:extend({
             },
             rotate = false,
             orientation_to_variation = false
+        },
+
+        integration_patch_render_layer = "remnants",
+        integration_patch = {
+            sheets = {
+                {
+                    filename = graphics_dir .. "tank/no_window.png",
+                    priority = "extra-high",
+                    frames = 1,
+                    width = 176,
+                    height = 176,
+                    shift = { 0, 0 },
+                    hr_version = {
+                        filename = graphics_dir .. "tank/hr-no_window.png",
+                        priority = "extra-high",
+                        frames = 1,
+                        width = 352,
+                        height = 352,
+                        shift = { 0, 0 },
+                        scale = 0.5
+                    }
+                },
+            }
         },
 
         working_sound = table.deepcopy(data.raw["storage-tank"]["storage-tank"].working_sound),
