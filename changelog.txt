@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 2023-08-30
+  Features:
+    - added transparent tank variants with custom fluid animation
+    - made it possible to walk and drive over the top of storage tanks
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2023-08-23
   Features:
