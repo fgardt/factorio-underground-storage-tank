@@ -223,8 +223,7 @@ local function init(clear)
 end
 
 script.on_init(function() init(true) end)
-script.on_load(init)
---script.on_configuration_changed(function() init(true) end)
+script.on_configuration_changed(function() init(false) end)
 
 ---@param event
 ---| EventData.on_robot_built_entity
