@@ -3,6 +3,7 @@
   "version": "1.1.2",
   "title": "Underground Storage Tank",
   "author": "fgardt",
+  "contact": "https://discord.gg/XXJbWfMrtG",
   "homepage": "https://github.com/fgardt/factorio-underground-storage-tank",
   "description": "Adds a large buried storage tank with a capacity of 250k.\nSince they are mostly underground you can easily walk / drive over them.\n\nAdditionally you can select if you want the more vanilla looking opaque top or a transparent one with custom internal fluid animation by changing a startup setting.",
   "factorio_version": "1.1",
