@@ -225,6 +225,16 @@ end
 script.on_init(function() init(true) end)
 script.on_configuration_changed(function() init(false) end)
 
+script.on_load(function()
+    if not settings.startup[const.enable_transparent_setting].value then return end
+
+    if not global then return end
+    if global.count == 0 or global.rate == 0 then return end
+    if not global.ticks_per_check then return end
+
+    script.on_nth_tick(global.ticks_per_check, run_checks)
+end)
+
 ---@param event
 ---| EventData.on_robot_built_entity
 ---| EventData.script_raised_revive
