@@ -146,6 +146,7 @@ local circuit_definition = circuit_connector_definitions.create(
     }
 )
 
+local base_area = 500
 -- prototype defs
 local entity = {
     type = "storage-tank",
@@ -161,9 +162,9 @@ local entity = {
     flow_length_in_ticks = 360,
 
     fluid_box = {
-        base_area = 500,
+        base_area = base_area,
         base_level = -5,
-        height = 5,
+        height = settings.startup[const.volume_size_setting].value / (100 * base_area),
 
         pipe_covers = pipecoverspictures(),
         pipe_connections = {
