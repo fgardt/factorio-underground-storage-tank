@@ -1,6 +1,6 @@
 local const = require("constants")
 
-if not settings.startup[const.enable_transparent_setting].value then return end
+if not const.setting.is_transparent() then return end
 
 function animation_layer(filename, is_anim)
     local graphics_dir = const.graphics_dir .. "transparent_top/"
@@ -51,7 +51,7 @@ function build_animation(level)
 
     return {
         type = "animation",
-        name = "ust-transparent_top-" .. level,
+        name = const.prefix .. "transparent_top-" .. level,
         layers = layers,
     }
 end

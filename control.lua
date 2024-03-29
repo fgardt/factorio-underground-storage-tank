@@ -2,7 +2,7 @@ local const = require("constants")
 
 ---@return 1|30|60|300
 local function parse_rate_setting()
-    local rate = settings.global[const.update_rate_setting].value
+    local rate = const.setting.get_rate()
 
     if rate == "Slow" then
         return 300
@@ -28,13 +28,13 @@ local function init_globals()
     ---@class TankInfo
     ---@field age uint
     ---@field entity LuaEntity
-    ---@field animation uint64
+    ---@field animation uint64?
     ---@field prev_unit uint
     ---@field next_unit uint
 
     ---@class Global
     ---@field rate uint
-    ---@field tank table<uint, TankInfo>
+    ---@field tanks table<uint, TankInfo>
     ---@field count uint
     ---@field next_check uint
     ---@field ticks_per_check uint
@@ -54,7 +54,8 @@ end
 
 ---@param tank TankInfo
 local function update_tank(tank)
-    if not tank.entity.valid then
+    local entity = tank.entity
+    if not entity.valid then
         -- remove tnak from ring buffer
         global.count = global.count - 1
         --global.recalculate_timings = true
@@ -72,7 +73,7 @@ local function update_tank(tank)
     end
 
     if tank.animation == nil or not rendering.is_valid(tank.animation) then
-        if not settings.startup[const.enable_transparent_setting].value then return end
+        if not const.setting.is_transparent() then return end
 
         tank.animation = rendering.draw_animation({
             animation = "ust-transparent_top-0",
@@ -128,7 +129,7 @@ local function update_timings()
     local rate = global.rate
 
     -- check if we can disable tank scanning
-    if not settings.startup[const.enable_transparent_setting].value or count == 0 or rate == 0 then
+    if not const.setting.is_transparent() or count == 0 or rate == 0 then
         script.on_nth_tick(global.ticks_per_check, nil)
         return
     end
@@ -177,7 +178,7 @@ local function register_tank(entity)
 
     local age = game.tick
     local anim_id = nil
-    if settings.startup[const.enable_transparent_setting].value then
+    if const.setting.is_transparent() then
         anim_id = rendering.draw_animation({
             animation = "ust-transparent_top-0",
             target = entity,
@@ -226,7 +227,7 @@ script.on_init(function() init(true) end)
 script.on_configuration_changed(function() init(false) end)
 
 script.on_load(function()
-    if not settings.startup[const.enable_transparent_setting].value then return end
+    if not const.setting.is_transparent() then return end
 
     if not global then return end
     if global.count == 0 or global.rate == 0 then return end

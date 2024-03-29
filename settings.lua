@@ -3,22 +3,23 @@ local const = require("constants")
 data:extend({
     {
         type = "int-setting",
-        name = const.volume_size_setting,
+        name = const.setting.volume_size,
         setting_type = "startup",
         default_value = 250000,
         minimum_value = 1000,
         order = "a"
     },
     {
-        type = "bool-setting",
-        name = const.enable_transparent_setting,
+        type = "string-setting",
+        name = const.setting.graphic_mode,
         setting_type = "startup",
-        default_value = true,
+        default_value = "transparent",
+        allowed_values = { "transparent", "small window" },
         order = "b"
     },
     {
         type = "string-setting",
-        name = const.update_rate_setting,
+        name = const.setting.update_rate,
         setting_type = "runtime-global",
         default_value = "Fast",
         allowed_values = { "Slow", "Normal", "Fast", "Insane" },

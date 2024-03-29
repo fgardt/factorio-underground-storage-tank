@@ -104,7 +104,7 @@ local integration_patch = {
 }
 
 -- replace for transparent mode
-if settings.startup[const.enable_transparent_setting].value then
+if const.setting.is_transparent() then
     pictures.fluid_background = pictures.window_background
     pictures.flow_sprite = pictures.window_background
     pictures.gas_flow = pictures.window_background
@@ -147,7 +147,9 @@ local circuit_definition = circuit_connector_definitions.create(
 )
 
 local base_area = 500
+local height = const.setting.get_volume() / (100 * base_area)
 -- prototype defs
+---@type data.StorageTankPrototype
 local entity = {
     type = "storage-tank",
     name = const.entity_name,
@@ -164,7 +166,7 @@ local entity = {
     fluid_box = {
         base_area = base_area,
         base_level = -5,
-        height = settings.startup[const.volume_size_setting].value / (100 * base_area),
+        height = height,
 
         pipe_covers = pipecoverspictures(),
         pipe_connections = {
@@ -222,6 +224,7 @@ local entity = {
     icon_mipmaps = 4,
 }
 
+---@type data.ItemPrototype
 local item = {
     type = "item",
     name = const.entity_name,
@@ -234,6 +237,7 @@ local item = {
     stack_size = 50
 }
 
+---@type data.RecipePrototype
 local recipe = {
     type = "recipe",
     name = const.entity_name,
@@ -247,6 +251,7 @@ local recipe = {
     result = const.entity_name
 }
 
+---@type data.TechnologyPrototype
 local technology = {
     type = "technology",
     name = const.entity_name,
