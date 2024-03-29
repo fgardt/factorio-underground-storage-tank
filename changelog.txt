@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.0
+Date: 2024-03-29
+  Info:
+    - Renamed settings internally. Make sure to check your settings again if you used non default settings before updating!
+  Bugfixes:
+    - fixed large tanks not completely filling without using pumps
+  Features:
+    - added a new "closed" variant with no fill level indicator window
+---------------------------------------------------------------------------------------------------
 Version: 1.2.0
 Date: 2023-09-17
   Features:
