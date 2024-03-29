@@ -165,7 +165,7 @@ local entity = {
 
     fluid_box = {
         base_area = base_area,
-        base_level = -5,
+        base_level = -height,
         height = height,
 
         pipe_covers = pipecoverspictures(),
