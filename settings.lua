@@ -14,7 +14,7 @@ data:extend({
         name = const.setting.graphic_mode,
         setting_type = "startup",
         default_value = "transparent",
-        allowed_values = { "transparent", "small window" },
+        allowed_values = { "transparent", "small window", "closed" },
         order = "b"
     },
     {

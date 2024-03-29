@@ -1,33 +1,50 @@
 local const = require("constants")
+local sr = require("graphics.sr")
+local hr = require("graphics.hr")
+
+---@param name string
+---@param options table?
+---@param no_hr boolean?
+---@return table
+local function make_layer(name, options, no_hr)
+    local function internal(src, name, options)
+        local info = src[name]
+        local layer = {
+            filename = const.graphics_dir .. "tank/" .. name .. ".png",
+            width = info.width,
+            height = info.height,
+            scale = info.scale,
+            shift = info.shift,
+        }
+
+        for k, v in pairs(options or {}) do
+            layer[k] = v
+        end
+
+        return layer
+    end
+
+    local layer = internal(sr, name, options)
+
+    if not no_hr then
+        layer.hr_version = internal(hr, "hr-" .. name, options)
+    end
+
+    return layer
+end
 
 local pictures = table.deepcopy(data.raw["storage-tank"]["storage-tank"].pictures)
 
+pictures.window_background = {
+    filename = const.graphics_dir .. "blank.png",
+    priority = "extra-high",
+    size = 1,
+}
+
 pictures.picture = {
     layers = {
-        {
-            filename = const.graphics_dir .. "tank/window.png",
-            priority = "extra-high",
-            size = 176,
-            hr_version = {
-                filename = const.graphics_dir .. "tank/hr-window.png",
-                priority = "extra-high",
-                size = 352,
-                scale = 0.5
-            }
-        },
-        {
-            filename = const.graphics_dir .. "tank/shadow.png",
-            draw_as_shadow = true,
-            priority = "extra-high",
-            size = 176,
-            hr_version = {
-                filename = const.graphics_dir .. "tank/hr-shadow.png",
-                draw_as_shadow = true,
-                priority = "extra-high",
-                size = 352,
-                scale = 0.5
-            }
-        },
+        make_layer("window", { priority = "extra-high" }),
+        make_layer("shadow", { draw_as_shadow = true, priority = "extra-high" }),
         {
             filename = const.graphics_dir .. "corner_pipes/south-west.png",
             priority = "extra-high",
@@ -83,35 +100,39 @@ pictures.picture = {
     }
 }
 
-pictures.window_background = {
-    filename = const.graphics_dir .. "blank.png",
-    priority = "extra-high",
-    size = 1,
-}
-
-local integration_patch = {
-    filename = const.graphics_dir .. "tank/no_window.png",
-    priority = "extra-high",
-    size = 176,
-    shift = { 0, 0 },
-    hr_version = {
-        filename = const.graphics_dir .. "tank/hr-no_window.png",
-        priority = "extra-high",
-        size = 352,
-        shift = { 0, 0 },
-        scale = 0.5
-    }
-}
-
--- replace for transparent mode
+local integration_patch
 if const.setting.is_transparent() then
+    pictures.picture.layers[1] = nil
     pictures.fluid_background = pictures.window_background
     pictures.flow_sprite = pictures.window_background
     pictures.gas_flow = pictures.window_background
 
+    local t_sr = require("graphics.transparent_top.sr")["ring_tank"]
+    local t_hr = require("graphics.transparent_top.hr")["hr-ring_tank"]
+    integration_patch = {
+        filename = const.graphics_dir .. "transparent_top/ring_tank.png",
+        width = t_sr.width,
+        height = t_sr.height,
+        scale = t_sr.scale,
+        shift = t_sr.shift,
+        priority = "extra-high",
+        hr_version = {
+            filename = const.graphics_dir .. "transparent_top/hr-ring_tank.png",
+            width = t_hr.width,
+            height = t_hr.height,
+            scale = t_hr.scale,
+            shift = t_hr.shift,
+            priority = "extra-high",
+        }
+    }
+elseif const.setting.is_closed() then
     pictures.picture.layers[1] = nil
-    integration_patch.filename = const.graphics_dir .. "transparent_top/ring_tank.png"
-    integration_patch.hr_version.filename = const.graphics_dir .. "transparent_top/hr-ring_tank.png"
+    pictures.fluid_background = pictures.window_background
+    pictures.flow_sprite = pictures.window_background
+    pictures.gas_flow = pictures.window_background
+    integration_patch = make_layer("closed", { priority = "extra-high" })
+else
+    integration_patch = make_layer("no_window", { priority = "extra-high" })
 end
 
 -- circuit connections
@@ -188,15 +209,7 @@ local entity = {
     },
 
     water_reflection = {
-        pictures = {
-            filename = const.graphics_dir .. "tank/reflection.png",
-            priority = "extra-high",
-            variation_count = 1,
-            width = 176,
-            height = 176,
-            shift = { 0, 0 },
-            scale = 1
-        },
+        pictures = make_layer("reflection", { priority = "extra-high", variation_count = 1 }, true),
         rotate = false,
         orientation_to_variation = false
     },
@@ -219,7 +232,7 @@ local entity = {
     circuit_wire_connection_points = circuit_definition.points,
     circuit_wire_max_distance = default_circuit_wire_max_distance,
 
-    icon = "__base__/graphics/icons/storage-tank.png",
+    icon = const.graphics_dir .. "tank/item.png",
     icon_size = 64,
     icon_mipmaps = 4,
 }

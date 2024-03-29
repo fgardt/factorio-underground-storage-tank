@@ -2,42 +2,52 @@ local const = require("constants")
 
 if not const.setting.is_transparent() then return end
 
-function animation_layer(filename, is_anim)
-    local graphics_dir = const.graphics_dir .. "transparent_top/"
+local anim_sr = require("graphics.transparent_top.anim.sr")
+local anim_hr = require("graphics.transparent_top.anim.hr")
+local top_sr = require("graphics.transparent_top.sr")
+local top_hr = require("graphics.transparent_top.hr")
 
-    if is_anim then
-        graphics_dir = graphics_dir .. "frames/"
+---@param name string
+---@param is_anim boolean?
+local function animation_layer(name, is_anim)
+    local function internal(src, name, is_anim)
+        local info = src[name]
+
+        if is_anim then
+            name = "frames/" .. name
+        end
+
+        return {
+            filename = const.graphics_dir .. "transparent_top/" .. name .. ".png",
+            width = info.width,
+            height = info.height,
+            scale = info.scale,
+            shift = info.shift,
+            line_length = info.line_length,
+            frame_count = info.sprite_count,
+            repeat_count = 60 / info.sprite_count,
+            apply_runtime_tint = is_anim or false,
+            priority = "low",
+        }
     end
 
-    return {
-        filename = graphics_dir .. filename .. ".png",
-        priority = "low",
-        size = 144,
+    local hr, sr
+    if is_anim then
+        sr = anim_sr
+        hr = anim_hr
+    else
+        sr = top_sr
+        hr = top_hr
+    end
 
-        repeat_count = is_anim and 1 or 60,
-        frame_count = is_anim and 60 or 1,
-        line_length = is_anim and 8 or 1,
+    local layer = internal(sr, name, is_anim)
+    layer.hr_version = internal(hr, "hr-" .. name, is_anim)
 
-        apply_runtime_tint = is_anim or false,
-
-        hr_version = {
-            filename = graphics_dir .. "hr-" .. filename .. ".png",
-            priority = "low",
-            size = 288,
-            scale = 0.5,
-
-            repeat_count = is_anim and 1 or 60,
-            frame_count = is_anim and 60 or 1,
-            line_length = is_anim and 8 or 1,
-
-            apply_runtime_tint = is_anim or false,
-        },
-    }
+    return layer
 end
 
 function build_animation(level)
-    local layers = {}
-
+    local layers
     if level == 0 then
         layers = {
             animation_layer("support_frame"),
