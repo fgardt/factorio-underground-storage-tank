@@ -4,19 +4,19 @@ local const = require("constants")
 local function parse_rate_setting()
     local rate = const.setting.get_rate()
 
-    if rate == "Slow" then
+    if rate == "slow" then
         return 300
     end
 
-    if rate == "Normal" then
+    if rate == "normal" then
         return 60
     end
 
-    if rate == "Fast" then
+    if rate == "fast" then
         return 30
     end
 
-    if rate == "Insane" then
+    if rate == "insane" then
         return 1
     end
 

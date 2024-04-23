@@ -21,8 +21,8 @@ data:extend({
         type = "string-setting",
         name = const.setting.update_rate,
         setting_type = "runtime-global",
-        default_value = "Fast",
-        allowed_values = { "Slow", "Normal", "Fast", "Insane" },
+        default_value = "fast",
+        allowed_values = { "slow", "normal", "fast", "insane" },
         order = "a"
     }
 })

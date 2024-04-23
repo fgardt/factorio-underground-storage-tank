@@ -9,7 +9,7 @@ local function get_volume()
     return settings.startup[volume_size].value
 end
 
----@return "Slow"|"Normal"|"Fast"|"Insane"
+---@return "slow"|"normal"|"fast"|"insane"
 local function get_rate()
     ---@diagnostic disable-next-line: return-type-mismatch
     return settings.global[update_rate].value
