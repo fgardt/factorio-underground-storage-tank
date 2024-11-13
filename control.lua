@@ -24,7 +24,7 @@ local function parse_rate_setting()
     return 300
 end
 
-local function init_globals()
+local function init_storage()
     ---@class TankInfo
     ---@field age uint
     ---@field entity LuaEntity
@@ -32,7 +32,7 @@ local function init_globals()
     ---@field prev_unit uint
     ---@field next_unit uint
 
-    ---@class Global
+    ---@class Storage
     ---@field rate uint
     ---@field tanks table<uint, TankInfo>
     ---@field count uint
@@ -40,16 +40,16 @@ local function init_globals()
     ---@field ticks_per_check uint
     ---@field entities_per_check uint
     ---@field recalculate_timings boolean
-    global = global or {}
+    storage = storage or {}
 
-    global.rate = global.rate or parse_rate_setting()
-    global.tanks = global.tanks or {}
-    global.count = global.count or 0 ---@type uint
-    global.next_check = global.next_check or nil
+    storage.rate = storage.rate or parse_rate_setting()
+    storage.tanks = storage.tanks or {}
+    storage.count = storage.count or 0 ---@type uint
+    storage.next_check = storage.next_check or nil
 
-    global.ticks_per_check = global.ticks_per_check or 1 ---@type uint
-    global.entities_per_check = global.entities_per_check or 1 ---@type uint
-    global.recalculate_timings = false
+    storage.ticks_per_check = storage.ticks_per_check or 1 ---@type uint
+    storage.entities_per_check = storage.entities_per_check or 1 ---@type uint
+    storage.recalculate_timings = false
 end
 
 ---@param tank TankInfo
@@ -57,14 +57,14 @@ local function update_tank(tank)
     local entity = tank.entity
     if not entity.valid then
         -- remove tnak from ring buffer
-        global.count = global.count - 1
-        --global.recalculate_timings = true
+        storage.count = storage.count - 1
+        --storage.recalculate_timings = true
 
-        if global.count == 0 then
-            global.next_check = nil
+        if storage.count == 0 then
+            storage.next_check = nil
         else
-            global.tanks[tank.prev_unit].next_unit = tank.next_unit
-            global.tanks[tank.next_unit].prev_unit = tank.prev_unit
+            storage.tanks[tank.prev_unit].next_unit = tank.next_unit
+            storage.tanks[tank.next_unit].prev_unit = tank.prev_unit
         end
 
         tank = nil ---@type TankInfo
@@ -112,25 +112,25 @@ end
 
 ---@param _ NthTickEventData
 local function run_checks(_)
-    for _ = 1, global.entities_per_check do
-        if not global.next_check then
+    for _ = 1, storage.entities_per_check do
+        if not storage.next_check then
             return
         end
 
-        local info = global.tanks[ global.next_check --[[@as uint]] ]
-        global.next_check = info.next_unit
+        local info = storage.tanks[ storage.next_check --[[@as uint]] ]
+        storage.next_check = info.next_unit
 
         update_tank(info)
     end
 end
 
 local function update_timings()
-    local count = global.count
-    local rate = global.rate
+    local count = storage.count
+    local rate = storage.rate
 
     -- check if we can disable tank scanning
     if not const.setting.is_transparent() or count == 0 or rate == 0 then
-        script.on_nth_tick(global.ticks_per_check, nil)
+        script.on_nth_tick(storage.ticks_per_check, nil)
         return
     end
 
@@ -142,16 +142,16 @@ local function update_timings()
         ticks_per_check = 1799
     end
 
-    script.on_nth_tick(global.ticks_per_check, nil)
+    script.on_nth_tick(storage.ticks_per_check, nil)
     script.on_nth_tick(ticks_per_check, run_checks)
 
-    global.ticks_per_check = ticks_per_check
-    global.entities_per_check = entities_per_check
-    global.recalculate_timings = false
+    storage.ticks_per_check = ticks_per_check
+    storage.entities_per_check = entities_per_check
+    storage.recalculate_timings = false
 end
 
 script.on_nth_tick(1800, function(_)
-    --if global.recalculate_timings then
+    --if storage.recalculate_timings then
     update_timings()
     --end
 end)
@@ -164,16 +164,16 @@ local function register_tank(entity)
 
     ---@type uint, uint
     local next_unit, prev_unit
-    if not global.next_check then
-        global.next_check = entity.unit_number
+    if not storage.next_check then
+        storage.next_check = entity.unit_number
         next_unit = entity.unit_number ---@type uint
         prev_unit = entity.unit_number ---@type uint
     else
-        prev_unit = global.next_check ---@type uint
-        next_unit = global.tanks[prev_unit].next_unit
+        prev_unit = storage.next_check ---@type uint
+        next_unit = storage.tanks[prev_unit].next_unit
 
-        global.tanks[prev_unit].next_unit = entity.unit_number
-        global.tanks[next_unit].prev_unit = entity.unit_number
+        storage.tanks[prev_unit].next_unit = entity.unit_number
+        storage.tanks[next_unit].prev_unit = entity.unit_number
     end
 
     local age = game.tick
@@ -198,8 +198,8 @@ local function register_tank(entity)
         prev_unit = prev_unit,
     }
 
-    global.count = global.count + 1
-    global.tanks[entity.unit_number] = tank
+    storage.count = storage.count + 1
+    storage.tanks[entity.unit_number] = tank
 
     update_timings()
 end
@@ -207,15 +207,15 @@ end
 ---@param clear boolean?
 local function init(clear)
     if clear then
-        global = {}
+        storage = {}
         rendering.clear("underground-storage-tank")
     end
 
-    init_globals()
-    global.rate = parse_rate_setting()
+    init_storage()
+    storage.rate = parse_rate_setting()
     update_timings()
 
-    if clear or global.count == 0 then
+    if clear or storage.count == 0 then
         for _, surface in pairs(game.surfaces) do
             for _, entity in pairs(surface.find_entities_filtered({ type = "storage-tank", name = const.entity_name })) do
                 register_tank(entity)
@@ -230,11 +230,11 @@ script.on_configuration_changed(function() init(true) end)
 script.on_load(function()
     if not const.setting.is_transparent() then return end
 
-    if not global then return end
-    if global.count == 0 or global.rate == 0 then return end
-    if not global.ticks_per_check then return end
+    if not storage then return end
+    if storage.count == 0 or storage.rate == 0 then return end
+    if not storage.ticks_per_check then return end
 
-    script.on_nth_tick(global.ticks_per_check, run_checks)
+    script.on_nth_tick(storage.ticks_per_check, run_checks)
 end)
 
 ---@param event
@@ -248,7 +248,7 @@ end
 
 local ev = defines.events
 script.on_event(ev.on_runtime_mod_setting_changed, function()
-    global.rate = parse_rate_setting()
+    storage.rate = parse_rate_setting()
     update_timings()
 end)
 
