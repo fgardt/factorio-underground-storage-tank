@@ -28,7 +28,7 @@ local function init_globals()
     ---@class TankInfo
     ---@field age uint
     ---@field entity LuaEntity
-    ---@field animation uint64?
+    ---@field animation LuaRenderObject?
     ---@field prev_unit uint
     ---@field next_unit uint
 
@@ -72,7 +72,7 @@ local function update_tank(tank)
         return
     end
 
-    if tank.animation == nil or not rendering.is_valid(tank.animation) then
+    if tank.animation == nil or not tank.animation.valid then
         if not const.setting.is_transparent() then return end
 
         tank.animation = rendering.draw_animation({
@@ -88,12 +88,12 @@ local function update_tank(tank)
     local fluid = tank.entity.fluidbox[1]
 
     if not fluid then
-        rendering.set_animation(tank.animation, "ust-transparent_top-0")
-        rendering.set_color(tank.animation, { a = 0 })
+        tank.animation.animation = "ust-transparent_top-0"
+        tank.animation.color = { a = 0 }
         return
     end
 
-    local prototype = game.fluid_prototypes[fluid.name]
+    local prototype = prototypes.fluid[fluid.name]
     local level = math.floor((fluid.amount / tank.entity.prototype.fluid_capacity) * 20 + 0.5) * 5
     local color = prototype.base_color
     --local is_gas = (fluid.temperature or 15) > prototype.gas_temperature
@@ -104,8 +104,8 @@ local function update_tank(tank)
         color.a = color.a * 0.75
     end
 
-    rendering.set_animation(tank.animation, "ust-transparent_top-" .. level)
-    rendering.set_color(tank.animation, color)
+    tank.animation.animation = "ust-transparent_top-" .. level
+    tank.animation.color = color
 
     -- TODO: different animation for gases
 end
@@ -208,6 +208,7 @@ end
 local function init(clear)
     if clear then
         global = {}
+        rendering.clear("underground-storage-tank")
     end
 
     init_globals()
@@ -224,7 +225,7 @@ local function init(clear)
 end
 
 script.on_init(function() init(true) end)
-script.on_configuration_changed(function() init(false) end)
+script.on_configuration_changed(function() init(true) end)
 
 script.on_load(function()
     if not const.setting.is_transparent() then return end
@@ -242,9 +243,7 @@ end)
 ---| EventData.script_raised_built
 ---| EventData.on_built_entity
 local function placed_tank(event)
-    local entity = event.created_entity or event.entity
-
-    register_tank(entity)
+    register_tank(event.entity)
 end
 
 local ev = defines.events

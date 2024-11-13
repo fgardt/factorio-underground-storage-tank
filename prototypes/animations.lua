@@ -2,10 +2,8 @@ local const = require("constants")
 
 if not const.setting.is_transparent() then return end
 
-local anim_sr = require("graphics.transparent_top.anim.sr")
-local anim_hr = require("graphics.transparent_top.anim.hr")
-local top_sr = require("graphics.transparent_top.sr")
-local top_hr = require("graphics.transparent_top.hr")
+local anim = require("graphics.transparent_top.anim")
+local top = require("graphics.transparent_top.combined")
 
 ---@param name string
 ---@param is_anim boolean?
@@ -31,19 +29,14 @@ local function animation_layer(name, is_anim)
         }
     end
 
-    local hr, sr
+    local gdata
     if is_anim then
-        sr = anim_sr
-        hr = anim_hr
+        gdata = anim
     else
-        sr = top_sr
-        hr = top_hr
+        gdata = top
     end
 
-    local layer = internal(sr, name, is_anim)
-    layer.hr_version = internal(hr, "hr-" .. name, is_anim)
-
-    return layer
+    return internal(gdata, name, is_anim)
 end
 
 function build_animation(level)

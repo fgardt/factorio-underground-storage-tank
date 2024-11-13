@@ -1,12 +1,10 @@
 local const = require("constants")
-local sr = require("graphics.sr")
-local hr = require("graphics.hr")
+local combined = require("graphics.combined")
 
 ---@param name string
 ---@param options table?
----@param no_hr boolean?
 ---@return table
-local function make_layer(name, options, no_hr)
+local function make_layer(name, options)
     local function internal(src, name, options)
         local info = src[name]
         local layer = {
@@ -24,16 +22,14 @@ local function make_layer(name, options, no_hr)
         return layer
     end
 
-    local layer = internal(sr, name, options)
-
-    if not no_hr then
-        layer.hr_version = internal(hr, "hr-" .. name, options)
-    end
-
-    return layer
+    return internal(combined, name, options)
 end
 
 local pictures = table.deepcopy(data.raw["storage-tank"]["storage-tank"].pictures)
+
+if not pictures then
+    error("storage-tank pictures not found")
+end
 
 pictures.window_background = {
     filename = const.graphics_dir .. "blank.png",
@@ -48,88 +44,66 @@ pictures.picture = {
         {
             filename = const.graphics_dir .. "corner_pipes/south-west.png",
             priority = "extra-high",
-            size = 64,
+            size = 128,
             shift = { -2, 2 },
-            hr_version = {
-                filename = const.graphics_dir .. "corner_pipes/hr-south-west.png",
-                priority = "extra-high",
-                size = 128,
-                shift = { -2, 2 },
-                scale = 0.5
-            }
+            scale = 0.5
         },
         {
             filename = const.graphics_dir .. "corner_pipes/south-east.png",
             priority = "extra-high",
-            size = 64,
+            size = 128,
             shift = { 2, 2 },
-            hr_version = {
-                filename = const.graphics_dir .. "corner_pipes/hr-south-east.png",
-                priority = "extra-high",
-                size = 128,
-                shift = { 2, 2 },
-                scale = 0.5
-            }
+            scale = 0.5
         },
         {
             filename = const.graphics_dir .. "corner_pipes/north-west.png",
             priority = "extra-high",
-            size = 64,
+            size = 128,
             shift = { -2, -2 },
-            hr_version = {
-                filename = const.graphics_dir .. "corner_pipes/hr-north-west.png",
-                priority = "extra-high",
-                size = 128,
-                shift = { -2, -2 },
-                scale = 0.5
-            }
+            scale = 0.5
         },
         {
             filename = const.graphics_dir .. "corner_pipes/north-east.png",
             priority = "extra-high",
-            size = 64,
+            size = 128,
             shift = { 2, -2 },
-            hr_version = {
-                filename = const.graphics_dir .. "corner_pipes/hr-north-east.png",
-                priority = "extra-high",
-                size = 128,
-                shift = { 2, -2 },
-                scale = 0.5
-            }
+            scale = 0.5
         }
     }
 }
 
+---@type data.Animation
+local empty_gas = {
+    filename = const.graphics_dir .. "blank.png",
+    priority = "extra-high",
+    size = 1,
+    frame_count = 1,
+}
+
 local integration_patch
 if const.setting.is_transparent() then
-    pictures.picture.layers[1] = nil
+    pictures.picture.layers[1] = table.deepcopy(pictures.picture.layers[2])
+    pictures.picture.layers[2] = table.deepcopy(pictures.picture.layers[6])
+    pictures.picture.layers[6] = nil
+
     pictures.fluid_background = pictures.window_background
     pictures.flow_sprite = pictures.window_background
-    pictures.gas_flow = pictures.window_background
+    pictures.gas_flow = empty_gas
 
-    local t_sr = require("graphics.transparent_top.sr")["ring_tank"]
-    local t_hr = require("graphics.transparent_top.hr")["hr-ring_tank"]
+    local tt = require("graphics.transparent_top.combined")["ring_tank"]
     integration_patch = {
         filename = const.graphics_dir .. "transparent_top/ring_tank.png",
-        width = t_sr.width,
-        height = t_sr.height,
-        scale = t_sr.scale,
-        shift = t_sr.shift,
+        width = tt.width,
+        height = tt.height,
+        scale = tt.scale,
+        shift = tt.shift,
         priority = "extra-high",
-        hr_version = {
-            filename = const.graphics_dir .. "transparent_top/hr-ring_tank.png",
-            width = t_hr.width,
-            height = t_hr.height,
-            scale = t_hr.scale,
-            shift = t_hr.shift,
-            priority = "extra-high",
-        }
     }
 elseif const.setting.is_closed() then
     pictures.picture.layers[1] = nil
     pictures.fluid_background = pictures.window_background
     pictures.flow_sprite = pictures.window_background
-    pictures.gas_flow = pictures.window_background
+    pictures.gas_flow = empty_gas
     integration_patch = make_layer("closed", { priority = "extra-high" })
 else
     integration_patch = make_layer("no_window", { priority = "extra-high" })
@@ -137,7 +111,7 @@ end
 
 -- circuit connections
 require("circuit-connector-sprites")
-local circuit_definition = circuit_connector_definitions.create(
+local circuit_definition = circuit_connector_definitions.create_vector(
     universal_connector_template,
     {
         {
@@ -180,26 +154,24 @@ local entity = {
     scale_info_icons = false,
     selection_box = { { -2.5, -2.5 }, { 2.5, 2.5 } },
     collision_box = { { -2.3, -2.3 }, { 2.3, 2.3 } },
-    collision_mask = { "object-layer", "water-tile" },
+    collision_mask = { layers = { ["object"] = true, ["water_tile"] = true } },
 
     flow_length_in_ticks = 360,
 
     fluid_box = {
-        base_area = base_area,
-        base_level = -height,
-        height = height,
+        volume = base_area * height,
 
         pipe_covers = pipecoverspictures(),
         pipe_connections = {
-            { position = { -3, -2 } },
-            { position = { -2, -3 } },
-            { position = { -2, 3 } },
-            { position = { -3, 2 } },
-            { position = { 2, -3 } },
-            { position = { 3, -2 } },
-            { position = { 3, 2 } },
-            { position = { 2, 3 } },
-        },
+            { position = { -2, -2 }, direction = defines.direction.north },
+            { position = { -2, -2 }, direction = defines.direction.west },
+            { position = { 2, -2 },  direction = defines.direction.north },
+            { position = { 2, -2 },  direction = defines.direction.east },
+            { position = { -2, 2 },  direction = defines.direction.south },
+            { position = { -2, 2 },  direction = defines.direction.west },
+            { position = { 2, 2 },   direction = defines.direction.south },
+            { position = { 2, 2 },   direction = defines.direction.east },
+        }
     },
 
     pictures = pictures,
@@ -209,7 +181,7 @@ local entity = {
     },
 
     water_reflection = {
-        pictures = make_layer("reflection", { priority = "extra-high", variation_count = 1 }, true),
+        pictures = make_layer("reflection", { priority = "extra-high", variation_count = 1 }),
         rotate = false,
         orientation_to_variation = false
     },
@@ -234,7 +206,6 @@ local entity = {
 
     icon = const.graphics_dir .. "tank/item.png",
     icon_size = 64,
-    icon_mipmaps = 4,
 }
 
 ---@type data.ItemPrototype
@@ -243,7 +214,6 @@ local item = {
     name = const.entity_name,
     icon = const.graphics_dir .. "tank/item.png",
     icon_size = 64,
-    icon_mipmaps = 4,
     subgroup = "storage",
     order = "b[fluid]-b[storage-tank]",
     place_result = const.entity_name,
@@ -257,11 +227,13 @@ local recipe = {
     energy_required = 15,
     enabled = false,
     ingredients = {
-        { "storage-tank", 10 },
-        { "explosives",   10 },
-        { "pipe",         20 }
+        { type = "item", name = "storage-tank", amount = 10 },
+        { type = "item", name = "explosives",   amount = 10 },
+        { type = "item", name = "pipe",         amount = 20 }
     },
-    result = const.entity_name
+    results = {
+        { type = "item", name = const.entity_name, amount = 1 }
+    },
 }
 
 ---@type data.TechnologyPrototype
@@ -270,7 +242,6 @@ local technology = {
     name = const.entity_name,
     icon = const.graphics_dir .. "tank/tech.png",
     icon_size = 256,
-    icon_mipmaps = 4,
     effects = {
         {
             type = "unlock-recipe",
