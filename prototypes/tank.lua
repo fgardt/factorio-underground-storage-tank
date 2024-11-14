@@ -159,7 +159,7 @@ local entity = {
     flow_length_in_ticks = 360,
 
     fluid_box = {
-        volume = base_area * height,
+        volume = base_area * height * 100,
 
         pipe_covers = pipecoverspictures(),
         pipe_connections = {
