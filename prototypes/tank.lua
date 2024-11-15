@@ -198,8 +198,7 @@ local entity = {
         "player-creation",
     },
 
-    circuit_connector_sprites = circuit_definition.sprites,
-    circuit_wire_connection_points = circuit_definition.points,
+    circuit_connector = circuit_definition,
     circuit_wire_max_distance = default_circuit_wire_max_distance,
 
     icon = const.graphics_dir .. "tank/item.png",
