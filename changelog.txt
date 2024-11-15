@@ -22,7 +22,7 @@ Date: 2024-04-24
 Version: 2.0.0
 Date: 2024-03-29
   Info:
-    - Renamed settings internally. Make sure to check your settings again if you used non default settings before updating!
+    - renamed settings internally. Make sure to check your settings again if you used non default settings before updating!
   Bugfixes:
     - fixed large tanks not completely filling without using pumps
   Features:
