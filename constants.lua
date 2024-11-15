@@ -23,6 +23,10 @@ local function is_closed()
     return settings.startup[graphic_mode].value == "closed"
 end
 
+local function is_window()
+    return settings.startup[graphic_mode].value == "small window"
+end
+
 ---@class Constants
 local const = {
     setting = {
@@ -34,6 +38,7 @@ local const = {
         get_rate = get_rate,
         is_transparent = is_transparent,
         is_closed = is_closed,
+        is_window = is_window,
     },
     prefix = prefix,
     entity_name = "underground-storage-tank",

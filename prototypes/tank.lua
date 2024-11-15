@@ -80,8 +80,7 @@ local empty_gas = {
     frame_count = 1,
 }
 
-local integration_patch
-if const.setting.is_transparent() then
+if not const.setting.is_window() then
     pictures.picture.layers[1] = table.deepcopy(pictures.picture.layers[2])
     pictures.picture.layers[2] = table.deepcopy(pictures.picture.layers[6])
     pictures.picture.layers[6] = nil
@@ -89,7 +88,10 @@ if const.setting.is_transparent() then
     pictures.fluid_background = pictures.window_background
     pictures.flow_sprite = pictures.window_background
     pictures.gas_flow = empty_gas
+end
 
+local integration_patch
+if const.setting.is_transparent() then
     local tt = require("graphics.transparent_top.combined")["ring_tank"]
     integration_patch = {
         filename = const.graphics_dir .. "transparent_top/ring_tank.png",
@@ -100,10 +102,6 @@ if const.setting.is_transparent() then
         priority = "extra-high",
     }
 elseif const.setting.is_closed() then
-    pictures.picture.layers[1] = nil
-    pictures.fluid_background = pictures.window_background
-    pictures.flow_sprite = pictures.window_background
-    pictures.gas_flow = empty_gas
     integration_patch = make_layer("closed", { priority = "extra-high" })
 else
     integration_patch = make_layer("no_window", { priority = "extra-high" })
