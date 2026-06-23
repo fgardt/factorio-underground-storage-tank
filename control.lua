@@ -1,6 +1,6 @@
 local const = require("constants")
 
----@return 1|30|60|300
+---@return 1 | 30 | 60 | 300
 local function parse_rate_setting()
     local rate = const.setting.get_rate()
 
@@ -26,19 +26,19 @@ end
 
 local function init_storage()
     ---@class TankInfo
-    ---@field age uint
-    ---@field entity LuaEntity
+    ---@field age       uint
+    ---@field entity    LuaEntity
     ---@field animation LuaRenderObject?
     ---@field prev_unit uint
     ---@field next_unit uint
 
     ---@class Storage
-    ---@field rate uint
-    ---@field tanks table<uint, TankInfo>
-    ---@field count uint
-    ---@field next_check uint
-    ---@field ticks_per_check uint
-    ---@field entities_per_check uint
+    ---@field rate                uint
+    ---@field tanks               table<uint, TankInfo>
+    ---@field count               uint
+    ---@field next_check          uint
+    ---@field ticks_per_check     uint
+    ---@field entities_per_check  uint
     ---@field recalculate_timings boolean
     storage = storage or {}
 
@@ -58,7 +58,7 @@ local function update_tank(tank)
     if not entity.valid then
         -- remove tnak from ring buffer
         storage.count = storage.count - 1
-        --storage.recalculate_timings = true
+        -- storage.recalculate_timings = true
 
         if storage.count == 0 then
             storage.next_check = nil
@@ -81,11 +81,11 @@ local function update_tank(tank)
             surface = entity.surface,
             animation_offset = tank.age % 600,
             animation_speed = 0.1,
-            render_layer = "floor",
+            render_layer = "floor"
         })
     end
 
-    local fluid = tank.entity.fluidbox[1]
+    local fluid = tank.entity.get_fluid(1)
 
     if not fluid then
         tank.animation.animation = "ust-transparent_top-0"
@@ -96,7 +96,7 @@ local function update_tank(tank)
     local prototype = prototypes.fluid[fluid.name]
     local level = math.floor((fluid.amount / tank.entity.prototype.fluid_capacity) * 20 + 0.5) * 5
     local color = prototype.base_color
-    --local is_gas = (fluid.temperature or 15) > prototype.gas_temperature
+    -- local is_gas = (fluid.temperature or 15) > prototype.gas_temperature
 
     if level == 0 then
         color = { 0, 0, 0, 0 }
@@ -150,10 +150,10 @@ local function update_timings()
     storage.recalculate_timings = false
 end
 
-script.on_nth_tick(1800, function(_)
-    --if storage.recalculate_timings then
+script.on_nth_tick(1800, function (_)
+    -- if storage.recalculate_timings then
     update_timings()
-    --end
+    -- end
 end)
 
 ---@param entity LuaEntity?
@@ -185,18 +185,12 @@ local function register_tank(entity)
             surface = entity.surface,
             animation_offset = age % 600,
             animation_speed = 0.1,
-            render_layer = "floor",
+            render_layer = "floor"
         })
     end
 
     ---@type TankInfo
-    local tank = {
-        age = age,
-        entity = entity,
-        animation = anim_id,
-        next_unit = next_unit,
-        prev_unit = prev_unit,
-    }
+    local tank = { age = age, entity = entity, animation = anim_id, next_unit = next_unit, prev_unit = prev_unit }
 
     storage.count = storage.count + 1
     storage.tanks[entity.unit_number] = tank
@@ -224,10 +218,14 @@ local function init(clear)
     end
 end
 
-script.on_init(function() init(true) end)
-script.on_configuration_changed(function() init(true) end)
+script.on_init(function ()
+    init(true)
+end)
+script.on_configuration_changed(function ()
+    init(true)
+end)
 
-script.on_load(function()
+script.on_load(function ()
     if not const.setting.is_transparent() then return end
 
     if not storage then return end
@@ -238,22 +236,24 @@ script.on_load(function()
 end)
 
 ---@param event
----| EventData.on_robot_built_entity
----| EventData.script_raised_revive
----| EventData.script_raised_built
----| EventData.on_built_entity
+--- | EventData.on_robot_built_entity
+--- | EventData.script_raised_revive
+--- | EventData.script_raised_built
+--- | EventData.on_built_entity
 local function placed_tank(event)
     register_tank(event.entity)
 end
 
 local ev = defines.events
-script.on_event(ev.on_runtime_mod_setting_changed, function()
+script.on_event(ev.on_runtime_mod_setting_changed, function ()
     storage.rate = parse_rate_setting()
     update_timings()
 end)
 
 ---@type LuaScriptRaisedBuiltEventFilter[]
-local filter = { { filter = "type", type = "storage-tank" }, { filter = "name", name = const.entity_name, mode = "and" } }
+local filter = {
+    { filter = "type", type = "storage-tank" }, { filter = "name", name = const.entity_name, mode = "and" }
+}
 
 script.on_event(ev.on_robot_built_entity, placed_tank, filter)
 script.on_event(ev.script_raised_revive, placed_tank, filter)
